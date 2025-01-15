@@ -1,14 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 
 namespace DropFiles
 {
@@ -18,6 +13,7 @@ namespace DropFiles
     public partial class MainWindow : Window
     {
         public ObservableCollection<string> Files { get; set; } = [];
+        private bool isInternalDrag = false;
 
         public MainWindow()
         {
@@ -26,27 +22,35 @@ namespace DropFiles
         }
 
         // 当拖动操作进入或移动过窗口时触发此事件
-        private void Window_PreviewDragOver(object sender, DragEventArgs e)
+        private void Window_PreviewDragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) && !isInternalDrag)
             {
                 e.Effects = DragDropEffects.Copy;
-                ShowDropHint(); // 显示提示覆盖层
+                ShowDropHint();
             }
             else
             {
                 e.Effects = DragDropEffects.None;
-                HideDropHint(); // 隐藏提示覆盖层
             }
+            e.Handled = true;
+        }
 
+        // 当拖动操作离开窗口时触发此事件
+        private void Window_DragLeave(object sender, DragEventArgs e)
+        {
+            if (!isInternalDrag)
+            {
+                HideDropHint();
+            }
             e.Handled = true;
         }
 
         // 当用户在窗口内释放鼠标按钮完成拖放时触发此事件
         private void Window_Drop(object sender, DragEventArgs e)
         {
-            HideDropHint(); // 立即隐藏提示覆盖层
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            HideDropHint();
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) && !isInternalDrag)
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
@@ -55,6 +59,19 @@ namespace DropFiles
                         Files.Add(file);
                 }
             }
+            isInternalDrag = false;  // 重置状态
+        }
+
+        // 当拖动操作给出反馈时触发此事件
+        private void Window_GiveFeedback(object sender, GiveFeedbackEventArgs e)
+        {
+            // 如果鼠标指针移出了窗口，则隐藏提示覆盖层
+            if (Mouse.Captured == null || !this.IsMouseOver)
+            {
+                HideDropHint();
+            }
+
+            e.Handled = true;
         }
 
         // 显示提示覆盖层的方法
@@ -74,8 +91,10 @@ namespace DropFiles
             var listBoxItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
             if (listBoxItem != null)
             {
+                isInternalDrag = true;  // 设置内部拖动标志
                 var data = new DataObject(DataFormats.FileDrop, new string[] { (string)listBoxItem.Content });
                 DragDrop.DoDragDrop(listBoxItem, data, DragDropEffects.Move);
+                isInternalDrag = false;  // 拖动结束后重置标志
             }
         }
 

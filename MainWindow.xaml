@@ -6,7 +6,10 @@
         xmlns:local="clr-namespace:DropFiles"
         mc:Ignorable="d"
         Title="DropFiles" Height="450" Width="400"
-        AllowDrop="True" PreviewDragOver="Window_PreviewDragOver" Drop="Window_Drop">
+        AllowDrop="True"
+        PreviewDragEnter="Window_PreviewDragEnter"
+        Drop="Window_Drop"
+        DragLeave="Window_DragLeave">
     <Grid>
         <!-- 主内容区域 -->
         <Grid>
