@@ -8,8 +8,15 @@
         Title="DropFiles" Height="450" Width="400"
         AllowDrop="True" PreviewDragOver="Window_PreviewDragOver" Drop="Window_Drop">
     <Grid>
-        <ListBox Name="FileList" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
-                 AllowDrop="True" PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown" Margin="10,10,10,10"/>
+        <!-- 主内容区域 -->
+        <Grid>
+            <ListBox Name="FileList" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
+                     AllowDrop="True" PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown"/>
+        </Grid>
 
+        <!-- 拖放提示覆盖层 -->
+        <Grid Name="DropHintOverlay" Visibility="Collapsed" Background="#80000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock Text="拖放到此处" FontSize="24" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </Window>
