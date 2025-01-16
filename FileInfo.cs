@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace DropFiles
 {
@@ -76,14 +77,47 @@ namespace DropFiles
             FileName = Path.GetFileName(filePath);
         }
 
+        private class ShellIcon
+        {
+            // 导入shell32.dll的ExtractIcon函数
+            [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+            private static extern IntPtr ExtractIcon(IntPtr hInst, string lpszExeFileName, int nIconIndex);
+
+            public static Icon? GetFolderIcon(int index)
+            {
+                // 从shell32.dll提取文件夹图标 (索引3是标准的关闭文件夹图标)
+                IntPtr hIcon = ExtractIcon(IntPtr.Zero, "shell32.dll", index);
+
+                if (hIcon != IntPtr.Zero)
+                {
+                    return System.Drawing.Icon.FromHandle(hIcon);
+                }
+
+                return null;
+            }
+        }
+
+
         // 根据文件路径更新图标的方法
         private void UpdateIcon()
         {
             try
             {
-                using (var icon = System.Drawing.Icon.ExtractAssociatedIcon(FilePath))
+                if (Directory.Exists(FilePath))
                 {
+                    var icon = ShellIcon.GetFolderIcon(3);
                     Icon = ConvertIconToBitmapImage(icon);
+                }
+                else if (File.Exists(FilePath))
+                {
+                    using (var icon = System.Drawing.Icon.ExtractAssociatedIcon(FilePath))
+                    {
+                        Icon = ConvertIconToBitmapImage(icon);
+                    }
+                }
+                else
+                {
+                    Icon = null;
                 }
             }
             catch (Exception ex)
@@ -93,31 +127,6 @@ namespace DropFiles
                 Icon = null; // 或者设置为默认图标
             }
         }
-
-        // 从图标路径提取位图图像的方法
-        //private BitmapImage ExtractIcon(string iconPath)
-        //{
-        //    if (!string.IsNullOrEmpty(iconPath))
-        //    {
-        //        using (System.Drawing.Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(iconPath))
-        //        {
-        //            using (System.Drawing.Bitmap bitmap = icon.ToBitmap())
-        //            {
-        //                IntPtr hBitmap = bitmap.GetHbitmap();
-        //                BitmapImage bitmapImage = (BitmapImage)Imaging.CreateBitmapSourceFromHBitmap(
-        //                    hBitmap,
-        //                    IntPtr.Zero,
-        //                    Int32Rect.Empty,
-        //                    BitmapSizeOptions.FromEmptyOptions());
-
-        //                DeleteObject(hBitmap); // 清理非托管资源
-
-        //                return bitmapImage;
-        //            }
-        //        }
-        //    }
-        //    return null;
-        //}
 
         private BitmapImage ConvertIconToBitmapImage(Icon icon)
         {
@@ -138,8 +147,5 @@ namespace DropFiles
                 return bitmapImage;
             }
         }
-
-        //[System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        //private static extern bool DeleteObject(IntPtr hObject);
     }
 }

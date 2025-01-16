@@ -5,11 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DropFiles"
         mc:Ignorable="d"
-        Title="DropFiles" Height="450" Width="400"
+        Title="文件中转站" Height="450" Width="400"
         AllowDrop="True"
         PreviewDragEnter="Window_PreviewDragEnter"
         Drop="Window_Drop"
-        DragLeave="Window_DragLeave">
+        DragLeave="Window_DragLeave"
+        Icon="icon.png">
     
     <Window.Resources>
         <!-- 定义文件项的数据模板 -->
