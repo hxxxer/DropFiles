@@ -14,6 +14,7 @@ namespace DropFiles
     {
         public ObservableCollection<string> Files { get; set; } = [];
         private bool isInternalDrag = false;
+        private bool isInternalDrop = false;
 
         public MainWindow()
         {
@@ -60,19 +61,9 @@ namespace DropFiles
                 }
             }
             isInternalDrag = false;  // 重置状态
+            isInternalDrop = true;
         }
 
-        // 当拖动操作给出反馈时触发此事件
-        private void Window_GiveFeedback(object sender, GiveFeedbackEventArgs e)
-        {
-            // 如果鼠标指针移出了窗口，则隐藏提示覆盖层
-            if (Mouse.Captured == null || !this.IsMouseOver)
-            {
-                HideDropHint();
-            }
-
-            e.Handled = true;
-        }
 
         // 显示提示覆盖层的方法
         private void ShowDropHint()
@@ -91,9 +82,30 @@ namespace DropFiles
             var listBoxItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
             if (listBoxItem != null)
             {
+                string fileToMove = (string)listBoxItem.Content;
                 isInternalDrag = true;  // 设置内部拖动标志
-                var data = new DataObject(DataFormats.FileDrop, new string[] { (string)listBoxItem.Content });
-                DragDrop.DoDragDrop(listBoxItem, data, DragDropEffects.Move);
+
+                // 根据按键状态确定拖放效果
+                DragDropEffects effects = DragDropEffects.Move; // 默认为移动
+
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    effects = DragDropEffects.Copy;
+                }
+                else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+                {
+                    effects = DragDropEffects.Link;
+                }
+
+                var data = new DataObject(DataFormats.FileDrop, new string[] { fileToMove });
+                var result = DragDrop.DoDragDrop(listBoxItem, data, effects);
+
+                // 只有在外部移动操作成功完成时才删除文件
+                if (!isInternalDrop && result == DragDropEffects.Move)
+                {
+                    // 从列表中移除文件
+                    Files.Remove(fileToMove);
+                }
                 isInternalDrag = false;  // 拖动结束后重置标志
             }
         }
