@@ -12,7 +12,7 @@ namespace DropFiles
     /// </summary>
     public partial class MainWindow : Window
     {
-        public ObservableCollection<string> Files { get; set; } = [];
+        public ObservableCollection<FileInfo> Files { get; set; } = [];
         private bool isInternalDrag = false;
         private bool isInternalDrop = false;
 
@@ -56,8 +56,12 @@ namespace DropFiles
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
                 {
-                    if (!Files.Contains(file))
-                        Files.Add(file);
+                    // 创建 FileInfoViewModel 实例并检查是否已经包含该文件
+                    if (!Files.Any(f => f.FilePath == file))
+                    {
+                        var fileInfo = new FileInfo(file);
+                        Files.Add(new FileInfo(file));
+                    }
                 }
             }
             isInternalDrag = false;  // 重置状态
@@ -82,8 +86,12 @@ namespace DropFiles
             var listBoxItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
             if (listBoxItem != null)
             {
-                string fileToMove = (string)listBoxItem.Content;
+                // 获取 FileInfoViewModel 实例
+                FileInfo fileToMove = listBoxItem.Content as FileInfo;
+                if (fileToMove == null) return;
+
                 isInternalDrag = true;  // 设置内部拖动标志
+                isInternalDrop= false;
 
                 // 根据按键状态确定拖放效果
                 DragDropEffects effects = DragDropEffects.Move; // 默认为移动
@@ -97,7 +105,7 @@ namespace DropFiles
                     effects = DragDropEffects.Link;
                 }
 
-                var data = new DataObject(DataFormats.FileDrop, new string[] { fileToMove });
+                var data = new DataObject(DataFormats.FileDrop, new string[] { fileToMove.FilePath });
                 var result = DragDrop.DoDragDrop(listBoxItem, data, effects);
 
                 // 只有在外部移动操作成功完成时才删除文件
@@ -119,6 +127,22 @@ namespace DropFiles
 
             var parentT = parent as T;
             return parentT ?? FindAncestor<T>(parent);
+        }
+
+        // 处理 Del 键删除选中的 ListBox 项
+        private void FileList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                var selectedItems = FileList.SelectedItems;
+                // 使用 for 循环从后往前删除选中的项
+                for (int i = FileList.SelectedItems.Count - 1; i >= 0; i--)
+                {
+                    var item = FileList.SelectedItems[i];
+                    Files.Remove((FileInfo)item);
+                }
+                e.Handled = true;
+            }
         }
     }
 }

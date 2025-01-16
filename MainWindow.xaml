@@ -10,11 +10,44 @@
         PreviewDragEnter="Window_PreviewDragEnter"
         Drop="Window_Drop"
         DragLeave="Window_DragLeave">
+    
+    <Window.Resources>
+        <!-- 定义文件项的数据模板 -->
+        <DataTemplate x:Key="FileItemTemplate">
+            <StackPanel Orientation="Horizontal" Margin="2">
+                <Image Source="{Binding Path=Icon}" Width="16" Height="16" />
+                <TextBlock Text="{Binding Path=FileName}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 定义 ListBoxItem 的样式 -->
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="LightGray"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="DodgerBlue"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
     <Grid>
         <!-- 主内容区域 -->
         <Grid>
-            <ListBox Name="FileList" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
-                     AllowDrop="True" PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown"/>
+            <ListBox
+                Name="FileList"
+                SelectionMode="Extended"
+                ItemTemplate="{StaticResource FileItemTemplate}"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch" 
+                AllowDrop="True"
+                PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown"
+                KeyDown="FileList_KeyDown">
+            </ListBox> 
         </Grid>
 
         <!-- 拖放提示覆盖层 -->
