@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using MahApps.Metro.Controls;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,7 +11,7 @@ namespace DropFiles
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         public ObservableCollection<FileInfo> Files { get; set; } = [];
         private bool isInternalDrag = false;
@@ -72,13 +73,21 @@ namespace DropFiles
         // 显示提示覆盖层的方法
         private void ShowDropHint()
         {
-            DropHintOverlay.Visibility = Visibility.Visible;
+            var overlay = FindName("DropHintOverlay") as Grid;
+            if (overlay != null)
+            {
+                overlay.Visibility = Visibility.Visible; // 触发进入动画
+            }
         }
 
         // 隐藏提示覆盖层的方法
         private void HideDropHint()
         {
-            DropHintOverlay.Visibility = Visibility.Collapsed;
+            var overlay = FindName("DropHintOverlay") as Grid; // 假设覆盖层的名称为DropHintOverlay
+            if (overlay != null)
+            {
+                overlay.Visibility = Visibility.Collapsed; // 触发退出动画
+            }
         }
 
         private void FileList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -90,6 +99,24 @@ namespace DropFiles
                 FileInfo fileToMove = listBoxItem.Content as FileInfo;
                 if (fileToMove == null) return;
 
+                //if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                //{
+                //    // 将其他子项设置为不选中
+                //    ListBox listBox = ItemsControl.ItemsControlFromItemContainer(listBoxItem) as ListBox;
+                //    if (listBox != null)
+                //    {
+                //        foreach (var item in listBox.Items)
+                //        {
+                //            var itemContainer = listBox.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                //            if (itemContainer != listBoxItem)
+                //            {
+                //                itemContainer.IsSelected = false;
+                //            }
+                //        }
+                //    }
+                //}
+
+                listBoxItem.IsSelected = true;
                 isInternalDrag = true;  // 设置内部拖动标志
                 isInternalDrop= false;
 
@@ -113,6 +140,10 @@ namespace DropFiles
                 {
                     // 从列表中移除文件
                     Files.Remove(fileToMove);
+                    if (Files.Count == 0)
+                    {
+                        ShowDropHint();
+                    }
                 }
                 isInternalDrag = false;  // 拖动结束后重置标志
             }
@@ -140,6 +171,10 @@ namespace DropFiles
                 {
                     var item = FileList.SelectedItems[i];
                     Files.Remove((FileInfo)item);
+                    if (Files.Count == 0)
+                    {
+                        ShowDropHint();
+                    }
                 }
                 e.Handled = true;
             }
