@@ -1,4 +1,5 @@
 ﻿using MahApps.Metro.Controls;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -106,13 +107,10 @@ namespace DropFiles
                 if (fileToMove == null) return;
 
                 // 选中当前项
-                listBoxItem.IsSelected = true;
+                //listBoxItem.IsSelected = true;
 
                 // 保存拖动的项
                 _draggedItem = listBoxItem;
-
-                // 防止事件继续传播
-                //e.Handled = true;
             }
         }
 
@@ -171,14 +169,19 @@ namespace DropFiles
             }
         }
 
-        private void FileList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        //private void FileList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        //{
+        //    // 结束拖动
+        //    if (_draggedItem != null)
+        //    {
+        //        _draggedItem = null;
+        //        isInternalDrag = false;  // 拖动结束后重置标志
+        //    }
+        //}
+
+        private void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // 结束拖动
-            if (_draggedItem != null)
-            {
-                _draggedItem = null;
-                isInternalDrag = false;  // 拖动结束后重置标志
-            }
+            Console.WriteLine(this.FileList.SelectedItems.Count.ToString());
         }
 
         // 从当前对象dependencyObject开始，向上查找类型为T的父元素。找到则返回，否则返回null
