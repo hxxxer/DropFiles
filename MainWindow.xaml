@@ -79,6 +79,8 @@
                  VerticalContentAlignment="Stretch"
                  AllowDrop="True"
                  PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown"
+                 MouseMove="FileList_MouseMove"
+                 MouseLeftButtonUp="FileList_MouseLeftButtonUp"
                  KeyDown="FileList_KeyDown"
                  BorderThickness="0"
                  Background="{DynamicResource ListViewItemBackgroundPointerOver}">

@@ -16,6 +16,8 @@ namespace DropFiles
         public ObservableCollection<FileInfo> Files { get; set; } = [];
         private bool isInternalDrag = false;
         private bool isInternalDrop = false;
+        private Point _startPoint;
+        private ListBoxItem _draggedItem = null;
 
         public MainWindow()
         {
@@ -92,59 +94,89 @@ namespace DropFiles
 
         private void FileList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // 记录鼠标按下时的位置
+            _startPoint = e.GetPosition(null);
+
+            // 获取点击的 ListBoxItem
             var listBoxItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
             if (listBoxItem != null)
             {
-                // 获取 FileInfoViewModel 实例
+                // 获取 FileInfo 实例
                 FileInfo fileToMove = listBoxItem.Content as FileInfo;
                 if (fileToMove == null) return;
 
-                //if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-                //{
-                //    // 将其他子项设置为不选中
-                //    ListBox listBox = ItemsControl.ItemsControlFromItemContainer(listBoxItem) as ListBox;
-                //    if (listBox != null)
-                //    {
-                //        foreach (var item in listBox.Items)
-                //        {
-                //            var itemContainer = listBox.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                //            if (itemContainer != listBoxItem)
-                //            {
-                //                itemContainer.IsSelected = false;
-                //            }
-                //        }
-                //    }
-                //}
-
+                // 选中当前项
                 listBoxItem.IsSelected = true;
-                isInternalDrag = true;  // 设置内部拖动标志
-                isInternalDrop= false;
 
-                // 根据按键状态确定拖放效果
-                DragDropEffects effects = DragDropEffects.Move; // 默认为移动
+                // 保存拖动的项
+                _draggedItem = listBoxItem;
 
-                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                // 防止事件继续传播
+                //e.Handled = true;
+            }
+        }
+
+        private void FileList_MouseMove(object sender, MouseEventArgs e)
+        {
+            // 判断是否开始拖动
+            if (e.LeftButton == MouseButtonState.Pressed && _draggedItem != null)
+            {
+                Point mousePos = e.GetPosition(null);
+                Vector diff = _startPoint - mousePos;
+
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
-                    effects = DragDropEffects.Copy;
-                }
-                else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
-                {
-                    effects = DragDropEffects.Link;
-                }
+                    // 获取 FileInfo 实例
+                    FileInfo fileToMove = _draggedItem.Content as FileInfo;
+                    if (fileToMove == null) return;
 
-                var data = new DataObject(DataFormats.FileDrop, new string[] { fileToMove.FilePath });
-                var result = DragDrop.DoDragDrop(listBoxItem, data, effects);
+                    // 设置内部拖动标志
+                    isInternalDrag = true;
+                    isInternalDrop = false;
 
-                // 只有在外部移动操作成功完成时才删除文件
-                if (!isInternalDrop && result == DragDropEffects.Move)
-                {
-                    // 从列表中移除文件
-                    Files.Remove(fileToMove);
-                    if (Files.Count == 0)
+                    // 根据按键状态确定拖放效果
+                    DragDropEffects effects = DragDropEffects.Move; // 默认为移动
+
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
                     {
-                        ShowDropHint();
+                        effects = DragDropEffects.Copy;
                     }
+                    else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+                    {
+                        effects = DragDropEffects.Link;
+                    }
+
+                    // 创建拖动数据
+                    var data = new DataObject(DataFormats.FileDrop, new string[] { fileToMove.FilePath });
+
+                    // 开始拖动
+                    var result = DragDrop.DoDragDrop(_draggedItem, data, effects);
+
+                    // 只有在外部移动操作成功完成时才删除文件
+                    if (!isInternalDrop && result == DragDropEffects.Move)
+                    {
+                        // 从列表中移除文件
+                        Files.Remove(fileToMove);
+                        if (Files.Count == 0)
+                        {
+                            ShowDropHint();
+                        }
+                    }
+
+                    // 重置拖动项
+                    _draggedItem = null;
+                    isInternalDrag = false;  // 拖动结束后重置标志
                 }
+            }
+        }
+
+        private void FileList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // 结束拖动
+            if (_draggedItem != null)
+            {
+                _draggedItem = null;
                 isInternalDrag = false;  // 拖动结束后重置标志
             }
         }
