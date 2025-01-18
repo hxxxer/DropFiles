@@ -1,5 +1,4 @@
 ﻿using MahApps.Metro.Controls;
-using System.Collections;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -178,11 +177,6 @@ namespace DropFiles
         //        isInternalDrag = false;  // 拖动结束后重置标志
         //    }
         //}
-
-        private void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Console.WriteLine(this.FileList.SelectedItems.Count.ToString());
-        }
 
         // 从当前对象dependencyObject开始，向上查找类型为T的父元素。找到则返回，否则返回null
         private static T FindAncestor<T>(DependencyObject dependencyObject) where T : DependencyObject
