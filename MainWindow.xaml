@@ -49,20 +49,72 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Tag" Value="1"/>
+            <Setter Property="IsEnabled" Value="True"/>
             <!-- 初始不透明度为0 -->
             <Style.Triggers>
-                <Trigger Property="Visibility" Value="Visible">
+                <Trigger Property="IsEnabled" Value="True">
                     <Trigger.EnterActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.95" Duration="0:0:0.2"/>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 From="0" To="0.95"
+                                                 Duration="0:0:0.25"/>
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.EnterActions>
                     <Trigger.ExitActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.95" To="0" Duration="0:0:0.2"/>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 From="0.95" To="0"
+                                                 Duration="0:0:0.25"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DropHintLineStyle" TargetType="Rectangle">
+            <Setter Property="Stroke" Value="Black"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+            <Setter Property="StrokeDashArray" Value="4 4"/>
+            <Setter Property="RadiusX" Value="15"/>
+            <Setter Property="RadiusY" Value="15"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="IsEnabled" Value="True"/>
+            <!-- 触发器集合 -->
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="RadiusX"
+                                                 To="40"
+                                                 Duration="0:0:0.25"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RadiusY"
+                                                 To="40"
+                                                 Duration="0:0:0.25"/>
+                                <ThicknessAnimation Storyboard.TargetProperty="Margin"
+                                                 To="20"
+                                                 Duration="0:0:0.25"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="RadiusX"
+                                                 To="15"
+                                                 Duration="0:0:0.25"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RadiusY"
+                                                 To="15"
+                                                 Duration="0:0:0.25"/>
+                                <ThicknessAnimation Storyboard.TargetProperty="Margin"
+                                                 To="10"
+                                                 Duration="0:0:0.25"/>
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.ExitActions>
@@ -90,18 +142,13 @@
         <!-- 拖放提示覆盖层 -->
         <Grid Name="DropHintOverlay"
               Style="{StaticResource DropHintOverlayStyle}">
-            <Rectangle Stroke="Black"
-                       StrokeThickness="2"
-                       StrokeDashArray="4 4"
-                       RadiusX="15"
-                       RadiusY="15"
-                       Margin="10,10,10,10"
-                       Opacity="0.7"/>
+            <Rectangle Name="DropHintLine"
+                       Style="{StaticResource DropHintLineStyle}"/>
             <TextBlock Text="拖放到此处"
-                           FontSize="24"
-                           Foreground="#FF676767"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" FontFamily="Microsoft YaHei"/>
+                       FontSize="24"
+                       Foreground="#FF676767"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" FontFamily="Microsoft YaHei"/>
         </Grid>
     </Grid>
 </mah:MetroWindow>

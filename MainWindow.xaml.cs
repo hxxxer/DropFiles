@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 
 
 namespace DropFiles
@@ -75,20 +77,26 @@ namespace DropFiles
         // 显示提示覆盖层的方法
         private void ShowDropHint()
         {
-            var overlay = FindName("DropHintOverlay") as Grid;
-            if (overlay != null)
+            Grid? overlay = FindName("DropHintOverlay") as Grid;
+            Rectangle? tline = FindName("DropHintLine") as Rectangle;
+            if (overlay != null && tline != null)
             {
-                overlay.Visibility = Visibility.Visible; // 触发进入动画
+                // 触发进入动画
+                overlay.IsEnabled = true;
+                tline.IsEnabled = true;
             }
         }
 
         // 隐藏提示覆盖层的方法
         private void HideDropHint()
         {
-            var overlay = FindName("DropHintOverlay") as Grid; // 假设覆盖层的名称为DropHintOverlay
-            if (overlay != null)
+            var overlay = FindName("DropHintOverlay") as Grid;
+            Rectangle? tline = FindName("DropHintLine") as Rectangle;
+            if (overlay != null && tline != null)
             {
-                overlay.Visibility = Visibility.Collapsed; // 触发退出动画
+                // 触发退出动画
+                overlay.IsEnabled = false;
+                tline.IsEnabled = false;
             }
         }
 
