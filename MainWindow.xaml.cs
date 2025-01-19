@@ -25,6 +25,8 @@ namespace DropFiles
         {
             InitializeComponent();
             FileList.ItemsSource = Files;
+
+            new ListBoxSelectionBehavior(FileList);
         }
 
         // 当拖动操作进入或移动过窗口时触发此事件
@@ -82,8 +84,9 @@ namespace DropFiles
             if (overlay != null && tline != null)
             {
                 // 触发进入动画
+                overlay.IsHitTestVisible = true;
                 overlay.IsEnabled = true;
-                tline.IsEnabled = true;
+                tline.IsEnabled = false;
             }
         }
 
@@ -95,9 +98,11 @@ namespace DropFiles
             if (overlay != null && tline != null)
             {
                 // 触发退出动画
+                overlay.IsHitTestVisible = false;
                 overlay.IsEnabled = false;
-                tline.IsEnabled = false;
+                tline.IsEnabled = true;
             }
+
         }
 
         private void FileList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

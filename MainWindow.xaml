@@ -29,6 +29,7 @@
         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="15,10,15,0"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource AccentColorBrush}"/>
@@ -45,7 +46,7 @@
 
         <!-- 定义覆盖层的样式 -->
         <Style x:Key="DropHintOverlayStyle" TargetType="Grid">
-            <Setter Property="Background" Value="#6049b4e8"/>
+            <Setter Property="Background" Value="#8069c0ec"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="Opacity" Value="0"/>
@@ -59,7 +60,7 @@
                             <Storyboard>
                                 <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                  From="0" To="0.95"
-                                                 Duration="0:0:0.25"/>
+                                                 Duration="0:0:0.35"/>
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.EnterActions>
@@ -77,29 +78,29 @@
         </Style>
 
         <Style x:Key="DropHintLineStyle" TargetType="Rectangle">
-            <Setter Property="Stroke" Value="Black"/>
+            <Setter Property="Stroke" Value="#a7694a"/>
             <Setter Property="StrokeThickness" Value="2"/>
             <Setter Property="StrokeDashArray" Value="4 4"/>
             <Setter Property="RadiusX" Value="15"/>
             <Setter Property="RadiusY" Value="15"/>
             <Setter Property="Margin" Value="10"/>
             <Setter Property="Opacity" Value="0.7"/>
-            <Setter Property="IsEnabled" Value="True"/>
+            <Setter Property="IsEnabled" Value="False"/>
             <!-- 触发器集合 -->
             <Style.Triggers>
-                <Trigger Property="IsEnabled" Value="True">
+                <Trigger Property="IsEnabled" Value="False">
                     <Trigger.EnterActions>
                         <BeginStoryboard>
                             <Storyboard>
                                 <DoubleAnimation Storyboard.TargetProperty="RadiusX"
                                                  To="40"
-                                                 Duration="0:0:0.25"/>
+                                                 Duration="0:0:0.35"/>
                                 <DoubleAnimation Storyboard.TargetProperty="RadiusY"
                                                  To="40"
-                                                 Duration="0:0:0.25"/>
+                                                 Duration="0:0:0.35"/>
                                 <ThicknessAnimation Storyboard.TargetProperty="Margin"
                                                  To="20"
-                                                 Duration="0:0:0.25"/>
+                                                 Duration="0:0:0.35"/>
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.EnterActions>
@@ -132,21 +133,30 @@
                  HorizontalContentAlignment="Stretch"
                  VerticalContentAlignment="Stretch"
                  AllowDrop="True"
-                 PreviewMouseLeftButtonDown="FileList_PreviewMouseLeftButtonDown"
-                 MouseMove="FileList_MouseMove"
+
                  KeyDown="FileList_KeyDown"
                  BorderThickness="0"
-                 Background="{DynamicResource ListViewItemBackgroundPointerOver}">
+                 Background="{DynamicResource ListViewItemBackgroundPointerOver}"
+                 >
         </ListBox>
 
         <!-- 拖放提示覆盖层 -->
         <Grid Name="DropHintOverlay"
-              Style="{StaticResource DropHintOverlayStyle}">
+              Style="{StaticResource DropHintOverlayStyle}"
+              IsHitTestVisible="False">
+            <Grid.OpacityMask>
+                <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="1.7" RadiusY="1.7">
+                    <GradientStop Color="Transparent" Offset="1"/>
+                    <GradientStop Color="Black" Offset="0"/>
+                </RadialGradientBrush>
+            </Grid.OpacityMask>
+            
             <Rectangle Name="DropHintLine"
                        Style="{StaticResource DropHintLineStyle}"/>
             <TextBlock Text="拖放到此处"
                        FontSize="24"
-                       Foreground="#FF676767"
+                       Foreground="#697FEC"
+                       IsEnabled="False"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center" FontFamily="Microsoft YaHei"/>
         </Grid>
