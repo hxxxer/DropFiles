@@ -3,10 +3,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows;
 using System.Windows.Shapes;
+using ControlzEx.Standard;
 
 namespace DropFiles
 {
-    // MarqueeSelectionBehavior.cs
     public class ListBoxSelectionBehavior
     {
         private ListBox _listBox;
@@ -16,6 +16,9 @@ namespace DropFiles
         private bool _isDragging;          // 拖拽状态
         private Canvas _selectionCanvas;
         private ListBoxItem? _dragStartItem; // 记录开始拖拽的项
+        private List<object> _originalSelectedItems;
+        public bool _isInternalDrag = false;
+        public bool _isInternalDrop = false;
 
         public ListBoxSelectionBehavior(ListBox listBox)
         {
@@ -27,7 +30,7 @@ namespace DropFiles
             {
                 Fill = new SolidColorBrush(Color.FromArgb(50, 51, 153, 255)),
                 Stroke = new SolidColorBrush(Color.FromRgb(51, 153, 255)),
-                StrokeDashArray = new DoubleCollection(new double[] { 2 }),
+                //StrokeDashArray = new DoubleCollection(new double[] { 2 }),
                 Visibility = Visibility.Collapsed
             };
             _selectionCanvas.Children.Add(_selectionRect);
@@ -38,12 +41,13 @@ namespace DropFiles
             }
 
             _listBox.PreviewMouseLeftButtonDown += ListBox_PreviewMouseLeftButtonDown;
-            _listBox.PreviewMouseMove += ListBox_PreviewMouseMove;
-            _listBox.PreviewMouseLeftButtonUp += ListBox_PreviewMouseLeftButtonUp;
+            _listBox.MouseMove += ListBox_PreviewMouseMove;
+            _listBox.MouseLeftButtonUp += ListBox_PreviewMouseLeftButtonUp;
         }
 
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            _originalSelectedItems = new List<object>(_listBox.SelectedItems.Cast<object>());
             _startPoint = e.GetPosition(_selectionCanvas);
 
             // 检查鼠标是否点击在 ListBoxItem 上
@@ -93,6 +97,14 @@ namespace DropFiles
                 double top = Math.Min(_startPoint.Y, currentPoint.Y);
                 double width = Math.Abs(currentPoint.X - _startPoint.X);
                 double height = Math.Abs(currentPoint.Y - _startPoint.Y);
+                double viewportWidth = _listBox.ActualWidth;
+                double viewportHeight = _listBox.ActualHeight;
+
+                // 边界检查：确保选择框不会超出可视范围
+                //left = Math.Max(0, Math.Min(left, viewportWidth));
+                //top = Math.Max(0, Math.Min(top, viewportHeight));
+                width = Math.Max(0, Math.Min(width, viewportWidth - left));
+                height = Math.Max(0, Math.Min(height, viewportHeight - top));
 
                 Canvas.SetLeft(_selectionRect, left);
                 Canvas.SetTop(_selectionRect, top);
@@ -108,16 +120,43 @@ namespace DropFiles
                 if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance) // 拖拽阈值
                 {
-                    var selectedItems = _listBox.SelectedItems.Cast<object>().ToList();
-                    DragDrop.DoDragDrop(_listBox, selectedItems, DragDropEffects.Move);
+                    // 设置内部拖动标志
+                    _isInternalDrag = true;
+                    _isInternalDrop = false;
+                    //var result = DragDropEffects.None;
+
+                    var selectedItems = _listBox.SelectedItems.Cast<FileInfo>();
+                    var filePaths = selectedItems.Select(item => item.FilePath).ToArray();
+
+                    //if (filePaths.Length > 0)
+                    //{
+                    //}
+                    var dataObject = new DataObject(DataFormats.FileDrop, filePaths);
+
+                    var result = DragDrop.DoDragDrop(_listBox, dataObject, DragDropEffects.Move);
+
+                    // 只有在外部移动操作成功完成时才删除文件
+                    if (!_isInternalDrop && result == DragDropEffects.Move)
+                    {
+                        // 使用 for 循环从后往前删除选中的项
+                        for (int i = _listBox.SelectedItems.Count - 1; i >= 0; i--)
+                        {
+                            var item = _listBox.SelectedItems[i];
+                            _listBox.Items.Remove((FileInfo)item);
+                        }
+                    }
+
                     _isDragging = false;
+                    _isInternalDrag = false;  // 拖动结束后重置标志
                 }
             }
         }
 
         private void ListBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            _originalSelectedItems.Clear();
             _isMarqueeSelecting = false;
+            //_isInternalDrag = false;
             _isDragging = false;
             _dragStartItem = null;
             _selectionRect.Visibility = Visibility.Collapsed;
@@ -134,15 +173,16 @@ namespace DropFiles
                 Point itemTopLeft = listBoxItem.TranslatePoint(new Point(0, 0), _selectionCanvas);
                 Rect itemRect = new Rect(itemTopLeft.X, itemTopLeft.Y, listBoxItem.ActualWidth, listBoxItem.ActualHeight);
 
-                if (selectionRect.IntersectsWith(itemRect))
-                {
-                    if (!_listBox.SelectedItems.Contains(item))
-                        _listBox.SelectedItems.Add(item);
-                }
-                else if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
-                {
+                bool shouldSelect;
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                    shouldSelect = selectionRect.IntersectsWith(itemRect) ^ _originalSelectedItems.Contains(item);
+                else
+                    shouldSelect = selectionRect.IntersectsWith(itemRect);
+
+                if (shouldSelect)
+                    _listBox.SelectedItems.Add(item);
+                else
                     _listBox.SelectedItems.Remove(item);
-                }
             }
         }
 
