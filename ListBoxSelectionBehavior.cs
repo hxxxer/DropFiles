@@ -19,7 +19,8 @@ namespace DropFiles
         private bool _isDragging;          // 拖拽状态
         private Canvas _selectionCanvas;
         private ListBoxItem? _dragStartItem; // 记录开始拖拽的项
-        private List<object>? _originalSelectedItems;
+        private bool _hadDrop;
+        private List<object>? _originalSelectedItems = [];
         private ObservableCollection<FileInfo> _files { get; set; } = [];
         public bool _isInternalDrag;
         public bool _isInternalDrop;
@@ -30,6 +31,7 @@ namespace DropFiles
             _files = Files;
             _isInternalDrag = false;
             _isInternalDrop = false;
+            _hadDrop = false;
 
             InitializeSelectionUI();
             AttachEventHandlers();
@@ -79,13 +81,17 @@ namespace DropFiles
                 // 点击在项目上，准备拖拽
                 _dragStartItem = clickedItem;
                 _isDragging = true;
-
+                 
                 // 如果没有按住Ctrl键，并且点击的项目未被选中，清除其他选择
                 //if (Keyboard.Modifiers != ModifierKeys.Control && !clickedItem.IsSelected)
                 //{
                 //    _listBox.SelectedItems.Clear();
                 //    clickedItem.IsSelected = true;
                 //}
+
+                // 如果点击的项目已经被选中，则阻止清除其它选中项的行为
+                if (Keyboard.Modifiers == ModifierKeys.Control || clickedItem.IsSelected) 
+                    e.Handled = true;
             }
             else
             {
@@ -144,6 +150,7 @@ namespace DropFiles
                     // 设置内部拖动标志
                     _isInternalDrag = true;
                     _isInternalDrop = false;
+                    _hadDrop = true;
 
                     var selectedItems = _listBox.SelectedItems.Cast<FileInfo>();
                     var filePaths = selectedItems.Select(item => item.FilePath).ToArray();
@@ -163,7 +170,8 @@ namespace DropFiles
                         {
                             var item = _listBox.SelectedItems[i];
                             //_listBox.Items.Remove((FileInfo)item);
-                            _files.Remove((FileInfo)item);
+                            _files.Remove(item as FileInfo);
+                            //_ = _listBox.ItemsSource is _files;
                         }
                     }
 
@@ -178,10 +186,35 @@ namespace DropFiles
             _originalSelectedItems.Clear();
             _isInternalDrag = false;
             _isMarqueeSelecting = false;
-            _isDragging = false;
             _dragStartItem = null;
             _selectionRect.Visibility = Visibility.Collapsed;
             _listBox.ReleaseMouseCapture();
+
+            DependencyObject originalSource = e.OriginalSource as DependencyObject;
+            // 检查鼠标是否点击在 ListBoxItem 上
+            ListBoxItem clickedItem = FindAncestor<ListBoxItem>(originalSource);
+            if (!_hadDrop && _isDragging)
+            {
+                if (clickedItem != null) 
+                {
+                    if (Keyboard.Modifiers != ModifierKeys.Control)
+                    {
+                        _listBox.SelectedItems.Clear();
+                        clickedItem.IsSelected = true;
+                    }
+                    else
+                    {
+                        if (clickedItem.IsSelected)
+                            _listBox.SelectedItems.Remove(clickedItem.Content);
+                        else
+                            _listBox.SelectedItems.Add(clickedItem.Content);
+                    }
+                }
+                else
+                    _listBox.SelectedItems.Clear();
+            }
+            _hadDrop = false;
+            _isDragging = false;
         }
 
         private void UpdateSelection(Rect selectionRect)
