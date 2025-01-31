@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace DropFiles
 {
@@ -15,20 +16,20 @@ namespace DropFiles
     {
         private string _fileName;
         private string _filePath;
-        private BitmapImage _icon;
+        private BitmapImage? _icon;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         // 用于触发 PropertyChanged 事件的辅助方法
-        protected void OnPropertyChanged(string propertyName)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); // 使用 ?. 安全地调用事件
         }
 
         // 文件名属性
         public string FileName
         {
-            get { return _fileName; }
+            get => _fileName;
             set
             {
                 if (_fileName != value)
@@ -42,7 +43,7 @@ namespace DropFiles
         // 文件路径属性
         public string FilePath
         {
-            get { return _filePath; }
+            get => _filePath;
             set
             {
                 if (_filePath != value)
@@ -57,9 +58,9 @@ namespace DropFiles
         }
 
         // 文件图标属性
-        public BitmapImage Icon
+        public BitmapImage? Icon
         {
-            get { return _icon; }
+            get => _icon;
             set
             {
                 if (_icon != value)
@@ -110,10 +111,8 @@ namespace DropFiles
                 }
                 else if (File.Exists(FilePath))
                 {
-                    using (var icon = System.Drawing.Icon.ExtractAssociatedIcon(FilePath))
-                    {
-                        Icon = ConvertIconToBitmapImage(icon);
-                    }
+                    using var icon = System.Drawing.Icon.ExtractAssociatedIcon(FilePath);
+                    Icon = ConvertIconToBitmapImage(icon);
                 }
                 else
                 {
@@ -128,7 +127,7 @@ namespace DropFiles
             }
         }
 
-        private BitmapImage ConvertIconToBitmapImage(Icon icon)
+        private static BitmapImage ConvertIconToBitmapImage(Icon icon)
         {
             using (var bitmap = icon.ToBitmap())
             using (var memoryStream = new MemoryStream())

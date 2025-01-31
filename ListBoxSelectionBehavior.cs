@@ -6,6 +6,7 @@ using System.Windows.Shapes;
 using ControlzEx.Standard;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
+using System.Windows.Controls.Primitives;
 
 namespace DropFiles
 {
@@ -62,11 +63,15 @@ namespace DropFiles
 
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            DependencyObject originalSource = e.OriginalSource as DependencyObject;
+            ScrollBar scrollBar = FindAncestor<ScrollBar>(originalSource);
+            // 点击事件发生在滚动条上
+            if (scrollBar != null) return;
+
             _originalSelectedItems = new List<object>(_listBox.SelectedItems.Cast<object>());
             _startPoint = e.GetPosition(_selectionCanvas);
 
             // 检查鼠标是否点击在 ListBoxItem 上
-            DependencyObject originalSource = e.OriginalSource as DependencyObject;
             ListBoxItem clickedItem = FindAncestor<ListBoxItem>(originalSource);
 
             if (clickedItem != null)
@@ -76,11 +81,11 @@ namespace DropFiles
                 _isDragging = true;
 
                 // 如果没有按住Ctrl键，并且点击的项目未被选中，清除其他选择
-                if (Keyboard.Modifiers != ModifierKeys.Control && !clickedItem.IsSelected)
-                {
-                    _listBox.SelectedItems.Clear();
-                    clickedItem.IsSelected = true;
-                }
+                //if (Keyboard.Modifiers != ModifierKeys.Control && !clickedItem.IsSelected)
+                //{
+                //    _listBox.SelectedItems.Clear();
+                //    clickedItem.IsSelected = true;
+                //}
             }
             else
             {
@@ -202,17 +207,15 @@ namespace DropFiles
             }
         }
 
-        private static T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        // 从当前对象开始，向上查找类型为T的父元素。找到则返回，否则返回null
+        private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
-            while (current != null)
+            while (current is not null and not T)
             {
-                if (current is T ancestor)
-                {
-                    return ancestor;
-                }
                 current = VisualTreeHelper.GetParent(current);
             }
-            return null;
+            if (current is null) return null;
+            return current as T;
         }
     }
 }

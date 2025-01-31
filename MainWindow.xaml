@@ -135,7 +135,6 @@
                  AllowDrop="True"
                  SelectedValuePath="FilePath"
                  KeyDown="FileList_KeyDown"
-                 SelectionChanged="FileList_SelectionChanged"
                  BorderThickness="0"
                  Background="{DynamicResource ListViewItemBackgroundPointerOver}"
                  d:ItemsSource="{d:SampleData ItemCount=5}"
