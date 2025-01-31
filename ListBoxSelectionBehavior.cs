@@ -4,6 +4,8 @@ using System.Windows.Media;
 using System.Windows;
 using System.Windows.Shapes;
 using ControlzEx.Standard;
+using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace DropFiles
 {
@@ -16,22 +18,32 @@ namespace DropFiles
         private bool _isDragging;          // 拖拽状态
         private Canvas _selectionCanvas;
         private ListBoxItem? _dragStartItem; // 记录开始拖拽的项
-        private List<object> _originalSelectedItems;
-        public bool _isInternalDrag = false;
-        public bool _isInternalDrop = false;
+        private List<object>? _originalSelectedItems;
+        private ObservableCollection<FileInfo> _files { get; set; } = [];
+        public bool _isInternalDrag;
+        public bool _isInternalDrop;
 
-        public ListBoxSelectionBehavior(ListBox listBox)
+        public ListBoxSelectionBehavior(ListBox listBox, ObservableCollection<FileInfo> Files)
         {
             _listBox = listBox;
+            _files = Files;
+            _isInternalDrag = false;
+            _isInternalDrop = false;
 
+            InitializeSelectionUI();
+            AttachEventHandlers();
+        }
+
+        private void InitializeSelectionUI()
+        {
             // 创建选择框
             _selectionCanvas = new Canvas();
             _selectionRect = new Rectangle
             {
                 Fill = new SolidColorBrush(Color.FromArgb(50, 51, 153, 255)),
                 Stroke = new SolidColorBrush(Color.FromRgb(51, 153, 255)),
-                //StrokeDashArray = new DoubleCollection(new double[] { 2 }),
-                Visibility = Visibility.Collapsed
+                Visibility = Visibility.Collapsed,
+                IsEnabled = false,
             };
             _selectionCanvas.Children.Add(_selectionRect);
 
@@ -39,10 +51,13 @@ namespace DropFiles
             {
                 grid.Children.Add(_selectionCanvas);
             }
+        }
 
+        private void AttachEventHandlers()
+        {
             _listBox.PreviewMouseLeftButtonDown += ListBox_PreviewMouseLeftButtonDown;
-            _listBox.MouseMove += ListBox_PreviewMouseMove;
-            _listBox.MouseLeftButtonUp += ListBox_PreviewMouseLeftButtonUp;
+            _listBox.PreviewMouseMove += ListBox_PreviewMouseMove;
+            _listBox.PreviewMouseLeftButtonUp += ListBox_PreviewMouseLeftButtonUp;
         }
 
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -79,9 +94,10 @@ namespace DropFiles
                 Canvas.SetTop(_selectionRect, _startPoint.Y);
                 _selectionRect.Width = 0;
                 _selectionRect.Height = 0;
+
+                _listBox.CaptureMouse();
             }
 
-            _listBox.CaptureMouse();
         }
 
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -113,7 +129,7 @@ namespace DropFiles
 
                 UpdateSelection(new Rect(left, top, width, height));
             }
-            else if (_isDragging)
+            else if (_isDragging && e.LeftButton == MouseButtonState.Pressed)
             {
                 Vector diff = _startPoint - currentPoint;
                 // 处理拖拽
@@ -123,7 +139,6 @@ namespace DropFiles
                     // 设置内部拖动标志
                     _isInternalDrag = true;
                     _isInternalDrop = false;
-                    //var result = DragDropEffects.None;
 
                     var selectedItems = _listBox.SelectedItems.Cast<FileInfo>();
                     var filePaths = selectedItems.Select(item => item.FilePath).ToArray();
@@ -142,7 +157,8 @@ namespace DropFiles
                         for (int i = _listBox.SelectedItems.Count - 1; i >= 0; i--)
                         {
                             var item = _listBox.SelectedItems[i];
-                            _listBox.Items.Remove((FileInfo)item);
+                            //_listBox.Items.Remove((FileInfo)item);
+                            _files.Remove((FileInfo)item);
                         }
                     }
 
@@ -155,8 +171,8 @@ namespace DropFiles
         private void ListBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             _originalSelectedItems.Clear();
+            _isInternalDrag = false;
             _isMarqueeSelecting = false;
-            //_isInternalDrag = false;
             _isDragging = false;
             _dragStartItem = null;
             _selectionRect.Visibility = Visibility.Collapsed;

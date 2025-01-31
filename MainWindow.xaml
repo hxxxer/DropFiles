@@ -20,7 +20,7 @@
         <!-- 定义文件项的数据模板 -->
         <DataTemplate x:Key="FileItemTemplate">
             <StackPanel Orientation="Horizontal" Margin="2">
-                <Image Source="{Binding Path=Icon}" Width="16" Height="16" />
+                <Image Source="{Binding Path=Icon}" Width="16" Height="16"/>
                 <TextBlock Text="{Binding Path=FileName}" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
@@ -135,6 +135,7 @@
                  AllowDrop="True"
                  SelectedValuePath="FilePath"
                  KeyDown="FileList_KeyDown"
+                 SelectionChanged="FileList_SelectionChanged"
                  BorderThickness="0"
                  Background="{DynamicResource ListViewItemBackgroundPointerOver}"
                  d:ItemsSource="{d:SampleData ItemCount=5}"
