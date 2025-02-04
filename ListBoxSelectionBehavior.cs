@@ -18,7 +18,7 @@ namespace DropFiles
         private bool _isMarqueeSelecting;  // 框选状态
         private bool _isDragging;          // 拖拽状态
         private Canvas _selectionCanvas;
-        private ListBoxItem? _dragStartItem; // 记录开始拖拽的项
+        private ListBoxItem? _lastHoverItem; // 记录开始拖拽的项
         private bool _hadDrop;
         private List<object>? _originalSelectedItems = [];
         private ObservableCollection<FileInfo> _files { get; set; } = [];
@@ -79,18 +79,12 @@ namespace DropFiles
             if (clickedItem != null)
             {
                 // 点击在项目上，准备拖拽
-                _dragStartItem = clickedItem;
+                //_dragStartItem = clickedItem;
                 _isDragging = true;
-                 
-                // 如果没有按住Ctrl键，并且点击的项目未被选中，清除其他选择
-                //if (Keyboard.Modifiers != ModifierKeys.Control && !clickedItem.IsSelected)
-                //{
-                //    _listBox.SelectedItems.Clear();
-                //    clickedItem.IsSelected = true;
-                //}
 
-                // 如果点击的项目已经被选中，则阻止清除其它选中项的行为
-                if (Keyboard.Modifiers == ModifierKeys.Control || clickedItem.IsSelected) 
+                // 如果点击的项目已经被选中，则阻止清除其它选中项的行为；
+                // 或者如果按住Ctrl键，则阻止改变选中项的选中状态的行为。因为这个行为已经挪到PreviewMouseLeftButtonUp里
+                if (Keyboard.Modifiers == ModifierKeys.Control || (clickedItem.IsSelected && Keyboard.Modifiers != ModifierKeys.Shift)) 
                     e.Handled = true;
             }
             else
@@ -113,11 +107,25 @@ namespace DropFiles
 
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            //Point position = e.GetPosition(_listBox);
+            //HitTestResult presult = VisualTreeHelper.HitTest(_listBox, position);
+
+            //if (presult != null && e.LeftButton == MouseButtonState.Pressed)
+            //{
+            //    ListBoxItem item = FindAncestor<ListBoxItem>(presult.VisualHit);
+            //    if (item != null)
+            //    {
+            //        // 获取到当前指向的 ListBoxItem
+            //        var index = _listBox.ItemContainerGenerator.IndexFromContainer(item);
+            //        //var data = _listBox.Items[index]; // 获取数据项
+            //    }
+            //}
+
             if (!_isMarqueeSelecting && !_isDragging) return;
 
             Point currentPoint = e.GetPosition(_selectionCanvas);
 
-            if (_isMarqueeSelecting)
+            if (_isMarqueeSelecting && e.LeftButton == MouseButtonState.Pressed)
             {
                 // 处理框选
                 double left = Math.Min(_startPoint.X, currentPoint.X);
@@ -137,6 +145,12 @@ namespace DropFiles
                 Canvas.SetTop(_selectionRect, top);
                 _selectionRect.Width = width;
                 _selectionRect.Height = height;
+
+                // 增量状态对比
+                var hitItem = GetHoverItemUnderMouse(e);
+                if (ReferenceEquals(hitItem, _lastHoverItem) && hitItem != null)
+                    return; // 鼠标仍在同一项上，跳过后续处理
+                _lastHoverItem = hitItem;
 
                 UpdateSelection(new Rect(left, top, width, height));
             }
@@ -186,14 +200,14 @@ namespace DropFiles
             _originalSelectedItems.Clear();
             _isInternalDrag = false;
             _isMarqueeSelecting = false;
-            _dragStartItem = null;
+            //_dragStartItem = null;
             _selectionRect.Visibility = Visibility.Collapsed;
             _listBox.ReleaseMouseCapture();
 
             DependencyObject originalSource = e.OriginalSource as DependencyObject;
             // 检查鼠标是否点击在 ListBoxItem 上
             ListBoxItem clickedItem = FindAncestor<ListBoxItem>(originalSource);
-            if (!_hadDrop && _isDragging)
+            if (!_hadDrop && _isDragging && Keyboard.Modifiers != ModifierKeys.Shift)
             {
                 if (clickedItem != null) 
                 {
@@ -249,6 +263,14 @@ namespace DropFiles
             }
             if (current is null) return null;
             return current as T;
+        }
+
+        // 精准命中检测方法
+        private ListBoxItem GetHoverItemUnderMouse(MouseEventArgs e)
+        {
+            var hitResult = VisualTreeHelper.HitTest(_listBox, e.GetPosition(_listBox));
+            if (hitResult is null) return null;
+            return FindAncestor<ListBoxItem>(hitResult.VisualHit);
         }
     }
 }
