@@ -13,7 +13,6 @@
                  Icon="icon.png"
                  BorderThickness="0"
                  GlowBrush="#000000"
-                 WindowStartupLocation="CenterScreen"
                  >
 
     <mah:MetroWindow.Resources>
@@ -29,7 +28,7 @@
         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="3"/>
-            <Setter Property="Margin" Value="15,10,15,0"/>
+            <Setter Property="Margin" Value="10,10,0,0"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource AccentColorBrush}"/>
@@ -133,6 +132,7 @@
                  HorizontalContentAlignment="Stretch"
                  VerticalContentAlignment="Stretch"
                  AllowDrop="True"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  SelectedValuePath="FilePath"
                  KeyDown="FileList_KeyDown"
                  BorderThickness="0"

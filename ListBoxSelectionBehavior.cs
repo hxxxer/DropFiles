@@ -107,20 +107,6 @@ namespace DropFiles
 
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            //Point position = e.GetPosition(_listBox);
-            //HitTestResult presult = VisualTreeHelper.HitTest(_listBox, position);
-
-            //if (presult != null && e.LeftButton == MouseButtonState.Pressed)
-            //{
-            //    ListBoxItem item = FindAncestor<ListBoxItem>(presult.VisualHit);
-            //    if (item != null)
-            //    {
-            //        // 获取到当前指向的 ListBoxItem
-            //        var index = _listBox.ItemContainerGenerator.IndexFromContainer(item);
-            //        //var data = _listBox.Items[index]; // 获取数据项
-            //    }
-            //}
-
             if (!_isMarqueeSelecting && !_isDragging) return;
 
             Point currentPoint = e.GetPosition(_selectionCanvas);

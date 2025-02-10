@@ -25,8 +25,8 @@ namespace DropFiles
         {
             InitializeComponent();
             FileList.ItemsSource = Files;
-            Files.CollectionChanged += FileList_SelectionTo0;
 
+            Files.CollectionChanged += FileList_SelectionTo0;
             FileListExtend = new ListBoxSelectionBehavior(FileList, Files);
 
         }
