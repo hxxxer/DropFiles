@@ -110,6 +110,7 @@ namespace DropFiles
             if (!_isMarqueeSelecting && !_isDragging) return;
 
             Point currentPoint = e.GetPosition(_selectionCanvas);
+            var hitItem = GetHoverItemUnderMouse(e);
 
             if (_isMarqueeSelecting && e.LeftButton == MouseButtonState.Pressed)
             {
@@ -133,7 +134,6 @@ namespace DropFiles
                 _selectionRect.Height = height;
 
                 // 增量状态对比
-                var hitItem = GetHoverItemUnderMouse(e);
                 if (ReferenceEquals(hitItem, _lastHoverItem) && hitItem != null)
                     return; // 鼠标仍在同一项上，跳过后续处理
                 _lastHoverItem = hitItem;
@@ -151,6 +151,19 @@ namespace DropFiles
                     _isInternalDrag = true;
                     _isInternalDrop = false;
                     _hadDrop = true;
+                    _listBox.SelectedItems.Add(hitItem.Content);
+
+                    // 根据按键状态确定拖放效果
+                    DragDropEffects effects = DragDropEffects.Move; // 默认为移动
+
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                    {
+                        effects = DragDropEffects.Copy;
+                    }
+                    else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+                    {
+                        effects = DragDropEffects.Link;
+                    }
 
                     var selectedItems = _listBox.SelectedItems.Cast<FileInfo>();
                     var filePaths = selectedItems.Select(item => item.FilePath).ToArray();
@@ -160,7 +173,7 @@ namespace DropFiles
                     //}
                     var dataObject = new DataObject(DataFormats.FileDrop, filePaths);
 
-                    var result = DragDrop.DoDragDrop(_listBox, dataObject, DragDropEffects.Move);
+                    var result = DragDrop.DoDragDrop(_listBox, dataObject, effects);
 
                     // 只有在外部移动操作成功完成时才删除文件
                     if (!_isInternalDrop && result == DragDropEffects.Move)
