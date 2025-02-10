@@ -87,7 +87,7 @@ namespace DropFiles
                 if (Keyboard.Modifiers == ModifierKeys.Control || (clickedItem.IsSelected && Keyboard.Modifiers != ModifierKeys.Shift)) 
                     e.Handled = true;
             }
-            else
+            else if (_listBox.Items.Count > 0)
             {
                 // 点击在空白处，准备框选
                 _isMarqueeSelecting = true;
