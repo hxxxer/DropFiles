@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
@@ -114,6 +115,51 @@ namespace DropFiles
                 ShowDropHint();
         }
 
+        private void ListBoxItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListBoxItem listBoxItem)
+            {
+                try
+                {
+                    // 获取绑定的数据项并验证类型
+                    if (listBoxItem.Content is FileInfo fileInfo)
+                    {
+                        var filePath = fileInfo.FilePath; // 获取完整路径
+
+                        // 验证文件路径是否有效
+                        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+                        {
+                            MessageBox.Show($"文件路径无效或文件不存在: {filePath}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        // 使用默认程序打开文件
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
+                        {
+                            UseShellExecute = true // 确保使用 Shell 执行，提高安全性
+                        });
+                    }
+                    else
+                    {
+                        MessageBox.Show("未找到有效的文件信息", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                //catch (FileNotFoundException ex)
+                //{
+                //    MessageBox.Show($"文件未找到: {ex.FileName}\n错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                //}
+                //catch (UnauthorizedAccessException ex)
+                //{
+                //    MessageBox.Show($"访问文件时权限不足: {filePath}\n错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                //}
+                catch (Exception ex)
+                {
+                    // 处理其他可能的异常
+                    MessageBox.Show($"无法打开文件: {listBoxItem.Content}\n错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         // 处理 Del 键删除选中的 ListBox 项
         private void FileList_KeyDown(object sender, KeyEventArgs e)
         {
@@ -131,6 +177,17 @@ namespace DropFiles
                 }
                 e.Handled = true;
             }
+        }
+
+        // 从当前对象开始，向上查找类型为T的父元素。找到则返回，否则返回null
+        private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        {
+            while (current is not null and not T)
+            {
+                current = VisualTreeHelper.GetParent(current);
+            }
+            if (current is null) return null;
+            return current as T;
         }
     }
 }

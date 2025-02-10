@@ -29,6 +29,7 @@
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="3"/>
             <Setter Property="Margin" Value="10,10,0,0"/>
+            <EventSetter Event="MouseDoubleClick" Handler="ListBoxItem_MouseDoubleClick"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource AccentColorBrush}"/>

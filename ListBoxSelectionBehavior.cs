@@ -83,8 +83,9 @@ namespace DropFiles
                 _isDragging = true;
 
                 // 如果点击的项目已经被选中，则阻止清除其它选中项的行为；
-                // 或者如果按住Ctrl键，则阻止改变选中项的选中状态的行为。因为这个行为已经挪到PreviewMouseLeftButtonUp里
-                if (Keyboard.Modifiers == ModifierKeys.Control || (clickedItem.IsSelected && Keyboard.Modifiers != ModifierKeys.Shift)) 
+                // 或者如果按住Ctrl键，则阻止改变选中项的选中状态的行为。
+                // 因为这些行为已经挪到PreviewMouseLeftButtonUp里。
+                if (Keyboard.Modifiers == ModifierKeys.Control || (clickedItem.IsSelected && Keyboard.Modifiers != ModifierKeys.Shift))
                     e.Handled = true;
             }
             else if (_listBox.Items.Count > 0)
