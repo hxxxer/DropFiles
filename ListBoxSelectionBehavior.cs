@@ -63,6 +63,15 @@ namespace DropFiles
             _listBox.PreviewMouseLeftButtonUp += ListBox_PreviewMouseLeftButtonUp;
         }
 
+        public void InitializeScrollViewer()
+        {
+            var scrollViewer = FindChild<ScrollViewer>(_listBox);
+            if (scrollViewer != null)
+            {
+                scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
+            }
+        }
+
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject originalSource = e.OriginalSource as DependencyObject;
@@ -107,20 +116,6 @@ namespace DropFiles
 
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            //Point position = e.GetPosition(_listBox);
-            //HitTestResult presult = VisualTreeHelper.HitTest(_listBox, position);
-
-            //if (presult != null && e.LeftButton == MouseButtonState.Pressed)
-            //{
-            //    ListBoxItem item = FindAncestor<ListBoxItem>(presult.VisualHit);
-            //    if (item != null)
-            //    {
-            //        // 获取到当前指向的 ListBoxItem
-            //        var index = _listBox.ItemContainerGenerator.IndexFromContainer(item);
-            //        //var data = _listBox.Items[index]; // 获取数据项
-            //    }
-            //}
-
             if (!_isMarqueeSelecting && !_isDragging) return;
 
             Point currentPoint = e.GetPosition(_selectionCanvas);
@@ -132,6 +127,23 @@ namespace DropFiles
                 double top = Math.Min(_startPoint.Y, currentPoint.Y);
                 double width = Math.Abs(currentPoint.X - _startPoint.X);
                 double height = Math.Abs(currentPoint.Y - _startPoint.Y);
+
+                // 考虑滚动条的偏移量
+                var scrollViewer = FindChild<ScrollViewer>(_listBox);
+                if (scrollViewer != null)
+                {
+                    double verticalOffset = scrollViewer.VerticalOffset;
+                    //double horizontalOffset = scrollViewer.HorizontalOffset;
+                    //left -= horizontalOffset;
+                    //left -= verticalOffset;
+
+                    // 调整坐标以考虑滚动
+                    //double adjustedStartY = _startPoint.Y + verticalOffset;
+                    //double adjustedCurrentY = currentPoint.Y + verticalOffset;
+                    height += verticalOffset;
+                    //height += horizontalOffset;
+                }
+
                 double viewportWidth = _listBox.ActualWidth;
                 double viewportHeight = _listBox.ActualHeight;
 
@@ -192,6 +204,16 @@ namespace DropFiles
                     _isDragging = false;
                     _isInternalDrag = false;  // 拖动结束后重置标志
                 }
+            }
+        }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (_selectionRect.Visibility == Visibility.Visible)
+            {
+                // 重新计算选择框位置
+                double currentTop = Canvas.GetTop(_selectionRect);
+                Canvas.SetTop(_selectionRect, currentTop - e.VerticalChange);
             }
         }
 
@@ -263,6 +285,24 @@ namespace DropFiles
             }
             if (current is null) return null;
             return current as T;
+        }
+
+        // 辅助方法：查找指定元素下的第一个类型为T的子元素
+        private T? FindChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T typedChild)
+                    return typedChild;
+                else
+                {
+                    var result = FindChild<T>(child);
+                    if (result != null)
+                        return result;
+                }
+            }
+            return null;
         }
 
         // 精准命中检测方法

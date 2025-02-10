@@ -29,6 +29,7 @@ namespace DropFiles
 
             FileListExtend = new ListBoxSelectionBehavior(FileList, Files);
 
+            this.Loaded += (s, e) => FileListExtend.InitializeScrollViewer();
         }
 
         // 当拖动操作进入或移动过窗口时触发此事件
